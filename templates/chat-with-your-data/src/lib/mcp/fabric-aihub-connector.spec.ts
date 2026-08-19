@@ -5,30 +5,24 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import { describe, expect, it } from "vitest";
-import {
-    ConnectorClientUnavailableError,
-    fabricAIHubConnectorConfig,
-    getFabricAIHubConnector,
-} from "@/lib/mcp/fabric-aihub-connector";
+import { describe, expect, it, vi } from "vitest";
 
-describe("FabricAIHub connector release boundary", () => {
-    it("keeps target configuration global", () => {
-        expect(fabricAIHubConnectorConfig).toEqual({
-            connector: "fabric-aihub",
-        });
-    });
+const { fabricAiHub } = vi.hoisted(() => ({
+    fabricAiHub: {
+        askPowerBI: vi.fn(),
+    },
+}));
 
-    it("reports explicit unavailability while the typed packages are unpublished", () => {
-        expect(getFabricAIHubConnector).toThrowError(ConnectorClientUnavailableError);
+vi.mock("@/lib/rayfin-client", () => ({
+    getRayfinClient: () => ({
+        connectors: { fabricAiHub },
+    }),
+}));
 
-        try {
-            getFabricAIHubConnector();
-        } catch (error) {
-            expect(error).toMatchObject({
-                code: "CONNECTOR_CLIENT_UNAVAILABLE",
-                message: expect.stringContaining("@microsoft/rayfin-connector-fabric-aihub"),
-            });
-        }
+import { getFabricAIHubConnector } from "@/lib/mcp/fabric-aihub-connector";
+
+describe("FabricAIHub connector boundary", () => {
+    it("returns the configured first-party connector", () => {
+        expect(getFabricAIHubConnector()).toBe(fabricAiHub);
     });
 });

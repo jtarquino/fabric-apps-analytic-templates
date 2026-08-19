@@ -5,63 +5,16 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import type { AskPowerBIConnectorInput } from "@/lib/mcp/contracts";
+import type {
+    FabricAIHubResult,
+    FabricAIHubTask,
+} from "@microsoft/rayfin-connector-fabric-aihub";
+import { getRayfinClient } from "@/lib/rayfin-client";
 
-export type FabricAIHubTaskStatus =
-    | "working"
-    | "input_required"
-    | "completed"
-    | "failed"
-    | "cancelled";
+export type { FabricAIHubResult, FabricAIHubTask };
 
-export interface FabricAIHubTask {
-    taskId: string;
-    status: FabricAIHubTaskStatus;
-    statusMessage?: string;
-}
-
-export interface FabricAIHubResult {
-    content: unknown[];
-    structuredContent?: unknown;
-    isError?: boolean;
-    meta?: unknown;
-    diagnostics?: unknown;
-    taskId?: string;
-}
-
-export interface FabricAIHubAskOptions {
-    onProgress?: (task: FabricAIHubTask) => void;
-    signal?: AbortSignal;
-    ttl?: number;
-    timeout?: number;
-}
-
-export const fabricAIHubConnectorConfig = {
-    connector: "fabric-aihub",
-} as const;
-
-export interface FabricAIHubConnector {
-    askPowerBI(
-        input: AskPowerBIConnectorInput,
-        options?: FabricAIHubAskOptions,
-    ): Promise<FabricAIHubResult>;
-}
-
-export class ConnectorClientUnavailableError extends Error {
-    readonly code = "CONNECTOR_CLIENT_UNAVAILABLE";
-
-    constructor() {
-        super(
-            "The Fabric AI Hub connector client is not available in this Rayfin release. " +
-                "Upgrade to a release that publishes @microsoft/rayfin-connector-fabric-aihub " +
-                "and its matching @microsoft/rayfin-client, then register the fabricAiHub connector.",
-        );
-        this.name = "ConnectorClientUnavailableError";
-    }
-}
-
-export function getFabricAIHubConnector(): FabricAIHubConnector {
-    throw new ConnectorClientUnavailableError();
+export function getFabricAIHubConnector() {
+    return getRayfinClient().connectors.fabricAiHub;
 }
 
 export function describeMcpError(error: unknown): string {

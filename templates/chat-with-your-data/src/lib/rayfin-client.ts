@@ -5,11 +5,28 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import { RayfinClient } from "@microsoft/rayfin-client";
+import { fabricAIHub, type FabricAIHub } from "@microsoft/rayfin-connector-fabric-aihub";
+import { ConnectorsRayfinClient } from "@microsoft/rayfin-client/experimental";
 
-let _client: RayfinClient | undefined;
+type AppConnectorsSchema = {
+    fabricAiHub: FabricAIHub;
+};
 
-export function getRayfinClient(): RayfinClient {
+const connectors = {
+    fabricAiHub: {
+        connector: "fabric-aihub",
+    },
+} as const;
+
+type AppRayfinClient = ConnectorsRayfinClient<
+    Record<string, never>,
+    Record<string, never>,
+    AppConnectorsSchema
+>;
+
+let _client: AppRayfinClient | undefined;
+
+export function getRayfinClient(): AppRayfinClient {
     if (!_client) {
         const apiUrl = import.meta.env.VITE_RAYFIN_API_URL;
         const publishableKey = import.meta.env.VITE_RAYFIN_PUBLISHABLE_KEY;
@@ -18,11 +35,21 @@ export function getRayfinClient(): RayfinClient {
             throw new Error(`Missing required env vars for creating rayfin client - run 'npx rayfin up'`);
         }
 
-        _client = new RayfinClient({
-            baseUrl: apiUrl,
-            publishableKey,
-            authStorage: true,
-        });
+        _client = new ConnectorsRayfinClient<
+            Record<string, never>,
+            Record<string, never>,
+            AppConnectorsSchema
+        >(
+            {
+                baseUrl: apiUrl,
+                publishableKey,
+                authStorage: true,
+                connectors,
+            },
+            {
+                fabricAiHub: fabricAIHub(),
+            },
+        );
     }
 
     return _client;

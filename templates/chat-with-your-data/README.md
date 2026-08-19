@@ -29,13 +29,16 @@ item ID is derived from generated Fabric config and sent only as the
 `AskPowerBI` `artifactId` argument. The browser never receives a reusable Fabric
 token.
 
-This source revision depends on the Rayfin release in which both
-`@microsoft/rayfin-connector-fabric-aihub` and its matching Rayfin client are
-published. Until then, `src/lib/mcp/fabric-aihub-connector.ts` mirrors the final
+The `fabricAiHub` instance has only `{ connector: "fabric-aihub" }` target
+configuration. `ConnectorsRayfinClient` registers the `fabricAIHub()` runtime and
+exposes the high-level
 `askPowerBI({ artifactId, query, context? }, { onProgress, signal, ttl, timeout })`
-contract and fails with upgrade instructions. The `fabricAiHub` instance has only
-`{ connector: "fabric-aihub" }` target configuration; semantic-model IDs remain
-tool arguments and never appear in connector configuration.
+helper. Semantic-model IDs remain tool arguments and never appear in connector
+configuration.
+
+This revision targets the coordinated Rayfin `1.35.0-alpha` release and remains
+blocked until those package versions, including
+`@microsoft/rayfin-connector-fabric-aihub`, are published.
 
 ## Run
 
