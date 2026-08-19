@@ -35,6 +35,10 @@ describe("AskPowerBI connector results", () => {
         askPowerBIThroughConnector.mockResolvedValue({
             isError: true,
             content: [{ type: "text", text: "The tool could not answer." }],
+            structuredContent: {
+                Answer: "This must not be treated as a successful answer.",
+                Status: "completed",
+            },
         });
 
         await expect(

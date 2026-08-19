@@ -119,6 +119,7 @@ export function useCopilotChat(artifactId: string) {
     const [isBusy, setIsBusy] = useState(false);
     const [visual, setVisual] = useState<ChatVisualRequest>();
     const abortRef = useRef<AbortController | undefined>(undefined);
+    const activeAssistantIdRef = useRef<string | undefined>(undefined);
     const messagesRef = useRef<ChatMessage[]>([]);
 
     const commitMessages = useCallback((next: (current: ChatMessage[]) => ChatMessage[]) => {
@@ -160,6 +161,7 @@ export function useCopilotChat(artifactId: string) {
             setIsBusy(true);
             const controller = new AbortController();
             abortRef.current = controller;
+            activeAssistantIdRef.current = assistantId;
             const steps: ProgressStep[] = [];
 
             try {
@@ -214,6 +216,7 @@ export function useCopilotChat(artifactId: string) {
             } finally {
                 if (abortRef.current === controller) {
                     abortRef.current = undefined;
+                    activeAssistantIdRef.current = undefined;
                     setIsBusy(false);
                 }
             }
@@ -222,14 +225,31 @@ export function useCopilotChat(artifactId: string) {
     );
 
     const stop = useCallback(() => {
+        const assistantId = activeAssistantIdRef.current;
         abortRef.current?.abort();
         abortRef.current = undefined;
+        activeAssistantIdRef.current = undefined;
+        if (assistantId) {
+            commitMessages((current) =>
+                current.map((message) =>
+                    message.id === assistantId
+                        ? {
+                              ...message,
+                              status: "done",
+                              text: "Stopped.",
+                              steps: message.steps?.map((step) => ({ ...step, done: true })),
+                          }
+                        : message,
+                ),
+            );
+        }
         setIsBusy(false);
-    }, []);
+    }, [commitMessages]);
 
     const clear = useCallback(() => {
         abortRef.current?.abort();
         abortRef.current = undefined;
+        activeAssistantIdRef.current = undefined;
         messagesRef.current = [];
         setMessages([]);
         setVisual(undefined);

@@ -178,6 +178,12 @@ export async function askPowerBI(options: AskPowerBIOptions): Promise<AskPowerBI
                 options.onProgress,
                 options.signal,
             );
+            if (result.isError) {
+                return parseToolResult({
+                    content: result.content as Array<{ type: string; text?: string }>,
+                    isError: true,
+                });
+            }
             if (
                 result.structuredContent &&
                 typeof result.structuredContent === "object" &&
@@ -187,7 +193,6 @@ export async function askPowerBI(options: AskPowerBIOptions): Promise<AskPowerBI
             }
             return parseToolResult({
                 content: result.content as Array<{ type: string; text?: string }>,
-                isError: result.isError,
             });
         } catch (error) {
             if (!isConnectorUnavailable(error)) throw error;
