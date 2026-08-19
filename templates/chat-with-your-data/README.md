@@ -19,34 +19,23 @@ than one semantic model is configured, set `VITE_FABRIC_SEMANTIC_MODEL_ALIAS` to
 the alias the chat should use. With no model, or with an ambiguous selection,
 the app renders a configuration state instead of attempting a request.
 
-## MCP transport
+## Fabric AI Hub connector
 
-The preferred path is the Rayfin Category B global FabricAIHub MCP connector.
-Its platform-owned adapter invokes AppBackend `/connector-invoke` with delegated
+The app uses the Rayfin Category B global FabricAIHub connector. Its
+platform-owned adapter invokes AppBackend `/connector-invoke` with delegated
 Fabric OBO and owns the MCP task lifecycle and global endpoint configuration.
 It has no workspace or item target configuration. The selected semantic-model
 item ID is derived from generated Fabric config and sent only as the
 `AskPowerBI` `artifactId` argument. The browser never receives a reusable Fabric
 token.
 
-Until that connector is available in the deployed Rayfin runtime, the template
-contains a compatibility `mcpProxy` Fabric User Data Function. It transparently
-forwards MCP JSON-RPC POST bodies with a delegated Fabric token and is isolated
-under `src/lib/mcp/transports/udf-compat.ts`. Remove that adapter and
-`rayfin/functions` once the connector is universally available; chat, query,
-and rendering code do not depend on it.
-
-The connector is attempted first. Only an explicit connector-unavailable
-response activates the compatibility function; authentication, authorization,
-and service errors are surfaced instead of being silently retried elsewhere.
-The package switch is intentionally deferred until both
+This source revision depends on the Rayfin release in which both
 `@microsoft/rayfin-connector-fabric-aihub` and its matching Rayfin client are
-published. `src/lib/mcp/fabric-aihub-connector.ts` mirrors the final
+published. Until then, `src/lib/mcp/fabric-aihub-connector.ts` mirrors the final
 `askPowerBI({ artifactId, query, context? }, { onProgress, signal, ttl, timeout })`
-contract and explicitly reports connector unavailability, which activates the
-installable UDF compatibility path. Once published, register the stable
-`fabricAiHub` instance with only `{ connector: "fabric-aihub" }`; semantic-model
-IDs must remain tool arguments and never appear in connector configuration.
+contract and fails with upgrade instructions. The `fabricAiHub` instance has only
+`{ connector: "fabric-aihub" }` target configuration; semantic-model IDs remain
+tool arguments and never appear in connector configuration.
 
 ## Run
 

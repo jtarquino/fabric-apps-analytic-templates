@@ -115,8 +115,3 @@ export const semanticModelConfiguration = selectSemanticModel(
     fabricConfig,
     import.meta.env.VITE_FABRIC_SEMANTIC_MODEL_ALIAS,
 );
-
-export const ASK_POWERBI_STREAM_VARIANTS = [
-    "AskPowerBITool.EnableStreamIntermediateResults",
-    "Fabric.AskPowerBITool.EnableStreamIntermediateResults",
-].join(",");

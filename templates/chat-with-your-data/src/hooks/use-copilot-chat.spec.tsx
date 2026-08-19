@@ -18,9 +18,8 @@ vi.mock("@/lib/mcp/ask-powerbi", () => ({
     isFailedPayload: vi.fn(() => false),
 }));
 
-vi.mock("@/lib/mcp/transports/udf-compat", () => ({
+vi.mock("@/lib/mcp/fabric-aihub-connector", () => ({
     describeMcpError: vi.fn((error: unknown) => String(error)),
-    formatMcpDiagnostics: vi.fn(() => ""),
 }));
 
 import { useCopilotChat } from "./use-copilot-chat";

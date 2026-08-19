@@ -11,8 +11,6 @@ interface ImportMetaEnv {
   readonly VITE_FABRIC_ITEM_ID?: string;
   /** Fabric portal base URL (e.g. https://app.fabric.microsoft.com/). */
   readonly VITE_FABRIC_PORTAL_URL?: string;
-  /** Optional local Rayfin functions host used during compatibility fallback development. */
-  readonly VITE_RAYFIN_FUNCTIONS_URL?: string;
   /** Alias to select when fabric.yaml contains more than one semantic model. */
   readonly VITE_FABRIC_SEMANTIC_MODEL_ALIAS?: string;
 }

@@ -63,16 +63,3 @@ export interface AskPowerBIConnectorInput {
     query: string;
     context?: string;
 }
-
-export interface McpDiagnostics {
-    rootActivityId?: string;
-    requestId?: string;
-    routingHint?: string;
-}
-
-export interface McpProxyResult {
-    status: number;
-    contentType: string;
-    body: string;
-    diagnostics: McpDiagnostics;
-}

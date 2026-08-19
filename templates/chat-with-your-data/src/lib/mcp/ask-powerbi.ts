@@ -5,18 +5,11 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
-import { ASK_POWERBI_STREAM_VARIANTS } from "@/lib/app-config";
 import type {
     AskPowerBIPayload,
     AskProgressEvent,
 } from "@/lib/mcp/contracts";
-import { parseStatusMessage } from "@/lib/mcp/progress";
-import {
-    askPowerBIThroughConnector,
-    isConnectorUnavailable,
-} from "@/lib/mcp/transports/connector";
-import { getUdfMcpClient } from "@/lib/mcp/transports/udf-compat";
+import { askPowerBIThroughConnector } from "@/lib/mcp/transports/connector";
 
 export type {
     AskPowerBIPayload,
@@ -32,9 +25,6 @@ export interface AskPowerBIOptions {
     signal?: AbortSignal;
     onProgress?: (event: AskProgressEvent) => void;
 }
-
-const TASK_TTL_MS = 10 * 60 * 1000;
-let connectorUnavailable = false;
 
 export function describePayloadError(payload: AskPowerBIPayload): string | undefined {
     const message = payload.Error?.Message ?? payload.error?.message;
@@ -84,7 +74,7 @@ export function parsePayload(
                 return parsed;
             }
         } catch {
-            // The content block is prose rather than the structured payload.
+            continue;
         }
     }
 
@@ -111,98 +101,30 @@ export function parseToolResult(result: {
     };
 }
 
-async function askThroughUdf(options: AskPowerBIOptions): Promise<AskPowerBIPayload> {
-    const { artifactId, query, context, signal, onProgress } = options;
-    const client = await getUdfMcpClient();
-    const seenStatus = new Set<string>();
-    const stream = client.experimental.tasks.callToolStream(
-        {
-            name: "AskPowerBI",
-            arguments: { artifactId, query, context: context ?? "" },
-            _meta: { variants: ASK_POWERBI_STREAM_VARIANTS },
-        },
-        CallToolResultSchema,
-        {
-            task: { ttl: TASK_TTL_MS },
-            signal,
-            timeout: TASK_TTL_MS,
-            maxTotalTimeout: TASK_TTL_MS,
-        },
-    );
-
-    for await (const message of stream) {
-        switch (message.type) {
-            case "taskCreated":
-                onProgress?.({ kind: "taskCreated", taskId: message.task.taskId });
-                break;
-            case "taskStatus": {
-                if (!message.task.statusMessage) break;
-                for (const event of parseStatusMessage(message.task.statusMessage)) {
-                    if (event.kind === "status") {
-                        if (seenStatus.has(event.message)) continue;
-                        seenStatus.add(event.message);
-                    }
-                    onProgress?.(event);
-                }
-                break;
-            }
-            case "result":
-                return parseToolResult({
-                    ...message.result,
-                    content: (message.result.content ?? []) as Array<{
-                        type: string;
-                        text?: string;
-                    }>,
-                });
-            case "error":
-                throw message.error;
-        }
-    }
-
-    throw new Error("The AskPowerBI task ended without a result.");
-}
-
-/**
- * Uses the first-party connector when provisioned, with the UDF retained only
- * as a compatibility path for connector-unavailable responses.
- */
 export async function askPowerBI(options: AskPowerBIOptions): Promise<AskPowerBIPayload> {
-    if (!connectorUnavailable) {
-        try {
-            const result = await askPowerBIThroughConnector(
-                {
-                    artifactId: options.artifactId,
-                    query: options.query,
-                    context: options.context,
-                },
-                options.onProgress,
-                options.signal,
-            );
-            if (result.isError) {
-                return parseToolResult({
-                    content: result.content as Array<{ type: string; text?: string }>,
-                    isError: true,
-                });
-            }
-            if (
-                result.structuredContent &&
-                typeof result.structuredContent === "object" &&
-                !Array.isArray(result.structuredContent)
-            ) {
-                return result.structuredContent as AskPowerBIPayload;
-            }
-            return parseToolResult({
-                content: result.content as Array<{ type: string; text?: string }>,
-            });
-        } catch (error) {
-            if (!isConnectorUnavailable(error)) throw error;
-            connectorUnavailable = true;
-        }
+    const result = await askPowerBIThroughConnector(
+        {
+            artifactId: options.artifactId,
+            query: options.query,
+            context: options.context,
+        },
+        options.onProgress,
+        options.signal,
+    );
+    if (result.isError) {
+        return parseToolResult({
+            content: result.content as Array<{ type: string; text?: string }>,
+            isError: true,
+        });
     }
-
-    return askThroughUdf(options);
-}
-
-export function resetConnectorAvailabilityForTests(): void {
-    connectorUnavailable = false;
+    if (
+        result.structuredContent &&
+        typeof result.structuredContent === "object" &&
+        !Array.isArray(result.structuredContent)
+    ) {
+        return result.structuredContent as AskPowerBIPayload;
+    }
+    return parseToolResult({
+        content: result.content as Array<{ type: string; text?: string }>,
+    });
 }

@@ -13,22 +13,13 @@ const { askPowerBIThroughConnector } = vi.hoisted(() => ({
 
 vi.mock("@/lib/mcp/transports/connector", () => ({
     askPowerBIThroughConnector,
-    isConnectorUnavailable: () => false,
 }));
 
-vi.mock("@/lib/mcp/transports/udf-compat", () => ({
-    getUdfMcpClient: vi.fn(),
-}));
-
-import {
-    askPowerBI,
-    resetConnectorAvailabilityForTests,
-} from "@/lib/mcp/ask-powerbi";
+import { askPowerBI } from "@/lib/mcp/ask-powerbi";
 
 describe("AskPowerBI connector results", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        resetConnectorAvailabilityForTests();
     });
 
     it("preserves the MCP isError flag when parsing connector content", async () => {

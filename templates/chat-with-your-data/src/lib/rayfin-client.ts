@@ -6,23 +6,10 @@
 //-----------------------------------------------------------------------
 
 import { RayfinClient } from "@microsoft/rayfin-client";
-import type { McpProxyResult } from "@/lib/mcp/contracts";
 
-type AppFunctionsSchema = {
-    mcpProxy: {
-        input: { body: string };
-        output: McpProxyResult;
-    };
-};
+let _client: RayfinClient | undefined;
 
-type AppRayfinClient = RayfinClient<Record<string, never>, AppFunctionsSchema>;
-
-let _client: AppRayfinClient | undefined;
-
-/**
- * Returns the pre-configured RayfinClient singleton.
- */
-export function getRayfinClient(): AppRayfinClient {
+export function getRayfinClient(): RayfinClient {
     if (!_client) {
         const apiUrl = import.meta.env.VITE_RAYFIN_API_URL;
         const publishableKey = import.meta.env.VITE_RAYFIN_PUBLISHABLE_KEY;
@@ -31,11 +18,10 @@ export function getRayfinClient(): AppRayfinClient {
             throw new Error(`Missing required env vars for creating rayfin client - run 'npx rayfin up'`);
         }
 
-        _client = new RayfinClient<Record<string, never>, AppFunctionsSchema>({
+        _client = new RayfinClient({
             baseUrl: apiUrl,
             publishableKey,
             authStorage: true,
-            functionsBaseUrl: import.meta.env.VITE_RAYFIN_FUNCTIONS_URL,
         });
     }
 

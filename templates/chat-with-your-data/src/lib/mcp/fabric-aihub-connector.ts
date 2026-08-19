@@ -36,10 +36,10 @@ export interface FabricAIHubAskOptions {
     timeout?: number;
 }
 
-/**
- * Release-safe boundary matching the unpublished first-party connector helper.
- * Replace this interface with the package marker when both packages are available.
- */
+export const fabricAIHubConnectorConfig = {
+    connector: "fabric-aihub",
+} as const;
+
 export interface FabricAIHubConnector {
     askPowerBI(
         input: AskPowerBIConnectorInput,
@@ -52,16 +52,28 @@ export class ConnectorClientUnavailableError extends Error {
 
     constructor() {
         super(
-            "The Fabric AI Hub connector requires the unpublished connector package and matching Rayfin client.",
+            "The Fabric AI Hub connector client is not available in this Rayfin release. " +
+                "Upgrade to a release that publishes @microsoft/rayfin-connector-fabric-aihub " +
+                "and its matching @microsoft/rayfin-client, then register the fabricAiHub connector.",
         );
         this.name = "ConnectorClientUnavailableError";
     }
 }
 
-/**
- * The connector implementation is deliberately unavailable until its packages
- * are published. The caller will use the installable UDF compatibility path.
- */
 export function getFabricAIHubConnector(): FabricAIHubConnector {
     throw new ConnectorClientUnavailableError();
+}
+
+export function describeMcpError(error: unknown): string {
+    const raw = error instanceof Error ? error.message : String(error);
+    if (/\b401\b|unauthorized|invalid_token/i.test(raw)) {
+        return "Fabric rejected your identity. Reload the app inside the Fabric portal.";
+    }
+    if (/\b403\b|forbidden/i.test(raw)) {
+        return "Your account is not allowed to query this semantic model through FabricAIHub.";
+    }
+    if (/failed to fetch|networkerror|load failed/i.test(raw)) {
+        return "The app could not reach its Rayfin backend.";
+    }
+    return raw;
 }

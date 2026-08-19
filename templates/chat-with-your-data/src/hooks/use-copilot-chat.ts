@@ -14,7 +14,7 @@ import {
     type AskPowerBIQueryRan,
     type AskProgressEvent,
 } from "@/lib/mcp/ask-powerbi";
-import { describeMcpError, formatMcpDiagnostics } from "@/lib/mcp/transports/udf-compat";
+import { describeMcpError } from "@/lib/mcp/fabric-aihub-connector";
 
 export interface ProgressStep {
     id: string;
@@ -191,8 +191,7 @@ export function useCopilotChat(artifactId: string) {
                     steps: [...steps],
                     status: failed ? "error" : "done",
                     error: failed
-                        ? (payloadError ?? payload.Answer ?? "The request failed.") +
-                          formatMcpDiagnostics()
+                        ? (payloadError ?? payload.Answer ?? "The request failed.")
                         : undefined,
                 });
 

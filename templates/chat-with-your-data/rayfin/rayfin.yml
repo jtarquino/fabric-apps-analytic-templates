@@ -12,11 +12,11 @@ services:
         enabled: false
     storage:
         enabled: false
-    functions:
-        enabled: true
-        buildCommand: npm run build
     staticHosting:
         enabled: true
         folder: dist
         buildCommand: npm run build:fabric
         indexDocument: index.html
+connectors:
+    fabricAiHub:
+        connector: fabric-aihub

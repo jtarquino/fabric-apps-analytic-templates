@@ -8,10 +8,17 @@
 import { describe, expect, it } from "vitest";
 import {
     ConnectorClientUnavailableError,
+    fabricAIHubConnectorConfig,
     getFabricAIHubConnector,
 } from "@/lib/mcp/fabric-aihub-connector";
 
 describe("FabricAIHub connector release boundary", () => {
+    it("keeps target configuration global", () => {
+        expect(fabricAIHubConnectorConfig).toEqual({
+            connector: "fabric-aihub",
+        });
+    });
+
     it("reports explicit unavailability while the typed packages are unpublished", () => {
         expect(getFabricAIHubConnector).toThrowError(ConnectorClientUnavailableError);
 
@@ -20,6 +27,7 @@ describe("FabricAIHub connector release boundary", () => {
         } catch (error) {
             expect(error).toMatchObject({
                 code: "CONNECTOR_CLIENT_UNAVAILABLE",
+                message: expect.stringContaining("@microsoft/rayfin-connector-fabric-aihub"),
             });
         }
     });

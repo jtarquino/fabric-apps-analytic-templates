@@ -9,9 +9,6 @@ import { RayfinClient } from "@microsoft/rayfin-client";
 
 let _client: RayfinClient | undefined;
 
-/**
- * Returns the pre-configured RayfinClient singleton.
- */
 export function getRayfinClient(): RayfinClient {
     if (!_client) {
         const apiUrl = import.meta.env.VITE_RAYFIN_API_URL;
