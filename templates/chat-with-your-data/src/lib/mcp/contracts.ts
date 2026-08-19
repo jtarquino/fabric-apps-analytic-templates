@@ -61,17 +61,7 @@ export type AskProgressEvent =
 export interface AskPowerBIConnectorInput {
     artifactId: string;
     query: string;
-    context: string;
-    variants: string;
-}
-
-/**
- * Temporary local description of the first-party connector response. Replace
- * this with the marker package export when the FabricAIHub connector ships.
- */
-export interface AskPowerBIConnectorResult {
-    payload: AskPowerBIPayload;
-    progress?: AskProgressEvent[];
+    context?: string;
 }
 
 export interface McpDiagnostics {

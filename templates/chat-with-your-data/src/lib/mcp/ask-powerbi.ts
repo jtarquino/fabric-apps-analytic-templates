@@ -11,6 +11,7 @@ import type {
     AskPowerBIPayload,
     AskProgressEvent,
 } from "@/lib/mcp/contracts";
+import { parseStatusMessage } from "@/lib/mcp/progress";
 import {
     askPowerBIThroughConnector,
     isConnectorUnavailable,
@@ -22,6 +23,7 @@ export type {
     AskPowerBIQueryRan,
     AskProgressEvent,
 } from "@/lib/mcp/contracts";
+export { parseStatusMessage } from "@/lib/mcp/progress";
 
 export interface AskPowerBIOptions {
     artifactId: string;
@@ -31,18 +33,8 @@ export interface AskPowerBIOptions {
     onProgress?: (event: AskProgressEvent) => void;
 }
 
-interface StatusEnvelope {
-    msg?: string;
-    errorMessage?: string;
-    events?: Array<Record<string, unknown>>;
-}
-
 const TASK_TTL_MS = 10 * 60 * 1000;
 let connectorUnavailable = false;
-
-function str(value: unknown): string | undefined {
-    return typeof value === "string" ? value : undefined;
-}
 
 export function describePayloadError(payload: AskPowerBIPayload): string | undefined {
     const message = payload.Error?.Message ?? payload.error?.message;
@@ -71,58 +63,6 @@ export function describePayloadError(payload: AskPowerBIPayload): string | undef
 export function isFailedPayload(payload: AskPowerBIPayload): boolean {
     const status = payload.Status?.toLowerCase();
     return Boolean(describePayloadError(payload)) || status === "error" || status === "failed";
-}
-
-function toProgressEvent(raw: Record<string, unknown>): AskProgressEvent | undefined {
-    switch (raw.type) {
-        case "askpowerbi.reasoning":
-            return {
-                kind: "reasoning",
-                header: str(raw.header),
-                description: str(raw.description),
-                functionName: str(raw.functionName),
-            };
-        case "askpowerbi.queryResult":
-            return {
-                kind: "queryResult",
-                queryId: str(raw.queryId),
-                header: str(raw.header),
-                title: str(raw.title),
-                description: str(raw.description),
-                daxQuery: str(raw.daxQuery),
-                isError: raw.isError === true,
-                errorMessage: str(raw.errorMessage),
-            };
-        case "askpowerbi.answer":
-            return { kind: "answer", answer: str(raw.answer), status: str(raw.status) };
-        default:
-            return undefined;
-    }
-}
-
-export function parseStatusMessage(statusMessage: string): AskProgressEvent[] {
-    const trimmed = statusMessage.trim();
-    if (!trimmed.startsWith("{")) return [{ kind: "status", message: trimmed }];
-
-    let envelope: StatusEnvelope;
-    try {
-        envelope = JSON.parse(trimmed) as StatusEnvelope;
-    } catch {
-        return [{ kind: "status", message: trimmed }];
-    }
-
-    const mapped = (envelope.events ?? [])
-        .map(toProgressEvent)
-        .filter((event): event is AskProgressEvent => Boolean(event));
-    const events: AskProgressEvent[] = [];
-    if (envelope.msg && mapped.length === 0) {
-        events.push({ kind: "status", message: envelope.msg });
-    }
-    events.push(...mapped);
-    if (envelope.errorMessage) {
-        events.push({ kind: "status", message: envelope.errorMessage });
-    }
-    return events;
 }
 
 export function parsePayload(
@@ -233,12 +173,21 @@ export async function askPowerBI(options: AskPowerBIOptions): Promise<AskPowerBI
                 {
                     artifactId: options.artifactId,
                     query: options.query,
-                    context: options.context ?? "",
-                    variants: ASK_POWERBI_STREAM_VARIANTS,
+                    context: options.context,
                 },
                 options.onProgress,
+                options.signal,
             );
-            return result.payload;
+            if (
+                result.structuredContent &&
+                typeof result.structuredContent === "object" &&
+                !Array.isArray(result.structuredContent)
+            ) {
+                return result.structuredContent as AskPowerBIPayload;
+            }
+            return parseToolResult({
+                content: result.content as Array<{ type: string; text?: string }>,
+            });
         } catch (error) {
             if (!isConnectorUnavailable(error)) throw error;
             connectorUnavailable = true;

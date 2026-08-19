@@ -5,12 +5,13 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import type {
-    AskPowerBIConnectorInput,
-    AskPowerBIConnectorResult,
-    AskProgressEvent,
-} from "@/lib/mcp/contracts";
-import { getFabricMcpConnectorClient } from "@/lib/mcp/fabric-mcp-connector";
+import type { AskPowerBIConnectorInput, AskProgressEvent } from "@/lib/mcp/contracts";
+import {
+    getFabricAIHubConnector,
+    type FabricAIHubResult,
+    type FabricAIHubTask,
+} from "@/lib/mcp/fabric-aihub-connector";
+import { parseStatusMessage } from "@/lib/mcp/progress";
 
 const UNAVAILABLE_CODES = new Set([
     "CONNECTOR_NOT_FOUND",
@@ -19,6 +20,7 @@ const UNAVAILABLE_CODES = new Set([
     "OPERATION_NOT_FOUND",
     "NOT_IMPLEMENTED",
 ]);
+const TASK_TIMEOUT_MS = 10 * 60 * 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
@@ -43,8 +45,23 @@ export function isConnectorUnavailable(error: unknown): boolean {
 export async function askPowerBIThroughConnector(
     input: AskPowerBIConnectorInput,
     onProgress?: (event: AskProgressEvent) => void,
-): Promise<AskPowerBIConnectorResult> {
-    const result = await getFabricMcpConnectorClient().askPowerBI(input);
-    for (const event of result.progress ?? []) onProgress?.(event);
-    return result;
+    signal?: AbortSignal,
+): Promise<FabricAIHubResult> {
+    let announcedTaskId: string | undefined;
+    return getFabricAIHubConnector().askPowerBI(input, {
+        signal,
+        ttl: TASK_TIMEOUT_MS,
+        timeout: TASK_TIMEOUT_MS,
+        onProgress: (task: FabricAIHubTask) => {
+            if (task.taskId !== announcedTaskId) {
+                announcedTaskId = task.taskId;
+                onProgress?.({ kind: "taskCreated", taskId: task.taskId });
+            }
+            if (task.statusMessage) {
+                for (const event of parseStatusMessage(task.statusMessage)) {
+                    onProgress?.(event);
+                }
+            }
+        },
+    });
 }

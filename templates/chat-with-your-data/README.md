@@ -39,9 +39,14 @@ and rendering code do not depend on it.
 The connector is attempted first. Only an explicit connector-unavailable
 response activates the compatibility function; authentication, authorization,
 and service errors are surfaced instead of being silently retried elsewhere.
-The temporary registration seam in
-`src/lib/mcp/fabric-mcp-connector.ts` is intentionally contract-neutral until
-the project-rayfin typed connector package is published.
+The package switch is intentionally deferred until both
+`@microsoft/rayfin-connector-fabric-aihub` and its matching Rayfin client are
+published. `src/lib/mcp/fabric-aihub-connector.ts` mirrors the final
+`askPowerBI({ artifactId, query, context? }, { onProgress, signal, ttl, timeout })`
+contract and explicitly reports connector unavailability, which activates the
+installable UDF compatibility path. Once published, register the stable
+`fabricAiHub` instance with only `{ connector: "fabric-aihub" }`; semantic-model
+IDs must remain tool arguments and never appear in connector configuration.
 
 ## Run
 
