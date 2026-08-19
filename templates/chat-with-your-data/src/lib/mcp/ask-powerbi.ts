@@ -187,6 +187,7 @@ export async function askPowerBI(options: AskPowerBIOptions): Promise<AskPowerBI
             }
             return parseToolResult({
                 content: result.content as Array<{ type: string; text?: string }>,
+                isError: result.isError,
             });
         } catch (error) {
             if (!isConnectorUnavailable(error)) throw error;

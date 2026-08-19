@@ -23,6 +23,7 @@ export interface FabricAIHubTask {
 export interface FabricAIHubResult {
     content: unknown[];
     structuredContent?: unknown;
+    isError?: boolean;
     meta?: unknown;
     diagnostics?: unknown;
     taskId?: string;
