@@ -1,10 +1,14 @@
 apiVersion: v1
 kind: template
 metadata:
-    name: data-app
-    displayName: Data App
-    description: Build data analytics app based on your data in Fabric
-    version: 0.0.1
+    name: fabric-apps-analytic-templates
+    displayName: Fabric Apps analytic templates
+    description: Build analytic apps and conversational data experiences in Fabric
+    version: 0.1.0
 entries:
     - name: Data App
-      path: .
+      path: templates/data-app
+      description: Build a custom analytics app backed by Fabric semantic models
+    - name: Chat with your data
+      path: templates/chat-with-your-data
+      description: Ask natural-language questions and render the resulting live DAX

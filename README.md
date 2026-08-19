@@ -1,9 +1,21 @@
 
-# Fabric Apps - Analytics Template
+# Fabric Apps - Analytics Templates
 
 > **⚠️ This repository is under active development.** Features and instructions may change.
 
-This is a starter template for building Fabric Apps - Analytics web apps. Clone this repo locally and follow the steps below to get started.
+This repository contains two Rayfin templates:
+
+| Entry | Path | Purpose |
+| --- | --- | --- |
+| `Data App` | `templates/data-app` | The existing dashboard-oriented Fabric analytics scaffold. |
+| `Chat with your data` | `templates/chat-with-your-data` | A generic conversational analytics scaffold backed by FabricAIHub `AskPowerBI`. |
+
+The app at the repository root remains a compatibility mirror of the original
+`Data App` scaffold so existing direct-clone workflows continue to work. Rayfin
+template consumers should select one of the isolated manifest entries instead.
+Keeping the compatibility mirror duplicates the Data App files, but avoids both
+a breaking root-layout migration and accidental inclusion of the chat template
+in Data App projects.
 
 
 ## Prerequisites
@@ -16,7 +28,7 @@ This is a starter template for building Fabric Apps - Analytics web apps. Clone 
 
 ## Instructions for building a new web app
 1. **Open Terminal**: Open Terminal in the local folder where you want to clone this repo and create your app.
-2. **Clone this repo**: Run `git clone <REPO_URL> <repo_name>`. Replace `<REPO_URL>` with this repository's URL and `<repo_name>` with the name you want for your project folder.
+2. **Create from a Rayfin template**: Select `Data App` or `Chat with your data` from `rayfin-template.yml`. Directly cloning the repository root continues to provide the Data App compatibility scaffold.
 3. **Navigate to the repo folder**: Run `cd <repo_name>`. (Optional: Run `code` to open VS Code in that folder and open Terminal inside VS Code.)
 4. **Install dependencies**: Run `npm install`.
 5. **Launch Copilot**: In the Command Prompt (cmd) or PowerShell terminal run `copilot` to start the Copilot CLI. Then type a prompt for what you want to build. Include the name or dataset ID of the semantic model (from Power BI Service) that you want to use. (To get the dataset ID, copy the value between `...dataset/` and `/overview...` from the URL)
@@ -41,6 +53,22 @@ This is a starter template for building Fabric Apps - Analytics web apps. Clone 
 
 </details>
 
+
+## Rayfin CLI registration
+
+Registry entries pin the repository release externally; `ref` is not a field
+inside `rayfin-template.yml`.
+
+```yaml
+- name: datachat
+  displayName: Chat with your data
+  url: https://github.com/microsoft/fabric-apps-analytic-templates
+  ref: vX.Y.Z
+  templateName: Chat with your data
+```
+
+Use a concrete release tag in place of `vX.Y.Z`. The selected manifest entry
+resolves to `templates/chat-with-your-data`.
 
 ## Need help?
 

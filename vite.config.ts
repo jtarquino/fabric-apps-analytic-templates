@@ -9,6 +9,7 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type PluginOption } from "vite";
 import license from "rollup-plugin-license";
+import { configDefaults } from "vitest/config";
 
 import { resolve } from 'path';
 
@@ -55,6 +56,9 @@ export default defineConfig({
     },
     optimizeDeps: {
         include: ['@microsoft/fabric-visuals', '@microsoft/fabric-datagrid', '@microsoft/fabric-visuals-core'],
+    },
+    test: {
+        exclude: [...configDefaults.exclude, "**/templates/**"],
     },
     build: {
         commonjsOptions: {
